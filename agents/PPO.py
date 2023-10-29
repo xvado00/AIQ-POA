@@ -21,7 +21,7 @@ import time
 
 class PPO(Agent):
 
-    def __init__( self, refm, disc_rate, steps_per_epoch =  20, train_pi_iters=80, train_v_iters = 80, gamma = 0.99, pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio = 0.2, target_kl = 0.01,  ac_kwargs=dict() ):
+    def __init__( self, refm, disc_rate, steps_per_epoch =  20, train_pi_iters=80, train_v_iters = 80, gamma = 0.99, pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio = 0.2, target_kl = 0.01, hidden1=64, hidden2=64, hidden3=0 ):
         Agent.__init__( self, refm, disc_rate )
 
         self.num_states  = refm.getNumObs() # assuming that states = observations
@@ -36,9 +36,11 @@ class PPO(Agent):
         self.pi_lr = pi_lr
         self.vf_lr = vf_lr
         self.Lambda = lam
-        self.ac_kwargs = ac_kwargs
         self.clip_ratio = clip_ratio
         self.target_kl = target_kl
+        self.hidden1 = int(hidden1)
+        self.hidden2 = int(hidden2)
+        self.hidden3 = int(hidden3)
         self.logger_kwargs = dict()
 
         # if the internal discount rate isn't set, use the environment value
@@ -62,7 +64,10 @@ class PPO(Agent):
 
         # Create actor-critic module
         actor_critic = core.MLPActorCritic
-        self.ac = actor_critic(self.obs_dim, self.act_dim, **self.ac_kwargs)
+        if self.hidden3 == 0:
+            self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2))
+        else:
+            self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2, self.hidden3))
 
 
         # Count variables
@@ -103,7 +108,8 @@ class PPO(Agent):
     def __str__( self ):
         return "PPO(" + str(int(self.steps_per_epoch)) + "," + str(self.train_pi_iters) + "," + str(self.train_v_iters) + "," + \
             str(self.gamma) + "," + str(self.pi_lr) + "," + \
-            str(self.vf_lr) + "," + str(self.Lambda) + "," + str(self.clip_ratio) + "," + str(self.target_kl) + "," + str(self.ac_kwargs) + ")"
+            str(self.vf_lr) + "," + str(self.Lambda) + "," + str(self.clip_ratio) + "," + str(self.target_kl) + "," + \
+            str(self.hidden1) + "," + str(self.hidden2) + "," + str(self.hidden3) + ")"
 
 
     # Set up function for computing PPO  policy loss

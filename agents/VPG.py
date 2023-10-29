@@ -21,7 +21,7 @@ import time
 class VPG(Agent):
 
     def __init__(self, refm, disc_rate, steps_per_epoch=40, train_v_iters=80, gamma=0.99, pi_lr=0.0003, vf_lr=0.001,
-                 lam=0.97, ac_kwargs=dict()):
+                 lam=0.97, hidden1=64, hidden2=64, hidden3=0):
         Agent.__init__( self, refm, disc_rate )
 
         self.num_states  = refm.getNumObs() # assuming that states = observations
@@ -35,7 +35,9 @@ class VPG(Agent):
         self.pi_lr = pi_lr
         self.vf_lr = vf_lr
         self.Lambda = lam
-        self.ac_kwargs = ac_kwargs
+        self.hidden1 = int(hidden1)
+        self.hidden2 = int(hidden2)
+        self.hidden3 = int(hidden3)
         self.logger_kwargs = dict()
 
 
@@ -66,7 +68,10 @@ class VPG(Agent):
 
         # Create actor-critic module
         actor_critic = core.MLPActorCritic
-        self.ac = actor_critic(self.obs_dim, self.act_dim, **self.ac_kwargs)
+        if self.hidden3 == 0:
+            self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2))
+        else:
+            self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2, self.hidden3))
 
 
         # Count variables
@@ -80,6 +85,7 @@ class VPG(Agent):
         # Set up optimizers for policy and value function
         self.pi_optimizer = Adam(self.ac.pi.parameters(), lr=self.pi_lr)
         self.vf_optimizer = Adam(self.ac.v.parameters(), lr=self.vf_lr)
+
     def reset( self ):
 
         # Prepare for interaction with environment
@@ -98,7 +104,7 @@ class VPG(Agent):
 
     def __str__( self ):
         return "VPG(" + str(self.steps_per_epoch) + "," + str(self.train_v_iters) + "," + str(self.gamma) + "," + str(self.pi_lr) + "," + \
-            str(self.vf_lr) + "," + str(self.Lambda) + "," + str(self.ac_kwargs) + ")"
+            str(self.vf_lr) + "," + str(self.Lambda) + "," + str(self.hidden1) + "," + str(self.hidden2) + "," + str(self.hidden3) + ")"
 
 
     # Set up function for computing VPG policy loss
