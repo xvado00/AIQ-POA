@@ -8,7 +8,7 @@ import os
 import torch
 from .mpi_tools import broadcast, mpi_avg, num_procs, proc_id
 
-def setup_pytorch_for_mpi():
+def setup_pytorch_for_mpi(threads):
     """
     Avoid slowdowns caused by each separate process's PyTorch using
     more than its fair share of CPU resources.
@@ -16,7 +16,7 @@ def setup_pytorch_for_mpi():
     #print('Proc %d: Reporting original number of Torch threads as %d.'%(proc_id(), torch.get_num_threads()), flush=True)
     if torch.get_num_threads()==1:
         return
-    fair_num_threads = max(int(torch.get_num_threads() / num_procs()), 1)
+    fair_num_threads = max(min(int(torch.get_num_threads() / num_procs()), int(threads)), 1)
     torch.set_num_threads(fair_num_threads)
     #print('Proc %d: Reporting new number of Torch threads as %d.'%(proc_id(), torch.get_num_threads()), flush=True)
 

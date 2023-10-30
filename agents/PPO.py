@@ -21,7 +21,7 @@ import time
 
 class PPO(Agent):
 
-    def __init__( self, refm, disc_rate, steps_per_epoch =  20, train_pi_iters=80, train_v_iters = 80, gamma = 0.99, pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio = 0.2, target_kl = 0.01, hidden1=64, hidden2=64, hidden3=0 ):
+    def __init__( self, refm, disc_rate, steps_per_epoch =  20, train_pi_iters=80, train_v_iters = 80, gamma = 0.99, pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio = 0.2, target_kl = 0.01, hidden1=64, hidden2=64, hidden3=0, threads=1 ):
         Agent.__init__( self, refm, disc_rate )
 
         self.num_states  = refm.getNumObs() # assuming that states = observations
@@ -41,6 +41,7 @@ class PPO(Agent):
         self.hidden1 = int(hidden1)
         self.hidden2 = int(hidden2)
         self.hidden3 = int(hidden3)
+        self.threads = int(threads)
         self.logger_kwargs = dict()
 
         # if the internal discount rate isn't set, use the environment value
@@ -91,7 +92,8 @@ class PPO(Agent):
         # Set up logger and save configuration
         self.logger = EpochLogger(output_fname= self.__str__() + '_' + '.csv',**self.logger_kwargs)
 
-
+        # setup agent multithreading
+        mpi_pytorch.setup_pytorch_for_mpi(self.threads)
 
         # self.logger.save_config(locals())
 

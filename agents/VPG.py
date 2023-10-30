@@ -21,7 +21,7 @@ import time
 class VPG(Agent):
 
     def __init__(self, refm, disc_rate, steps_per_epoch=40, train_v_iters=80, gamma=0.99, pi_lr=0.0003, vf_lr=0.001,
-                 lam=0.97, hidden1=64, hidden2=64, hidden3=0):
+                 lam=0.97, hidden1=64, hidden2=64, hidden3=0, threads=1):
         Agent.__init__( self, refm, disc_rate )
 
         self.num_states  = refm.getNumObs() # assuming that states = observations
@@ -38,6 +38,7 @@ class VPG(Agent):
         self.hidden1 = int(hidden1)
         self.hidden2 = int(hidden2)
         self.hidden3 = int(hidden3)
+        self.threads = int(threads)
         self.logger_kwargs = dict()
 
 
@@ -94,7 +95,8 @@ class VPG(Agent):
         # Set up logger and save configuration
         self.logger = EpochLogger(output_fname= self.__str__() + '_' + '.csv',**self.logger_kwargs)
 
-
+        # setup agent multithreading
+        mpi_pytorch.setup_pytorch_for_mpi(self.threads)
 
         # self.logger.save_config(locals())
 
