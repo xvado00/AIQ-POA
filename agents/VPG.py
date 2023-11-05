@@ -1,10 +1,14 @@
-"""
-VPG agent modified from Spinning up pytorch implementation of PPO agent for use on specifically Discrete
-and interactive (non-gym) based environment of AIQ.
 
-Original Author: Achiam Joshua 2018 (OpenAI)
-Modified By: Petr Zeman 2022
-"""
+#
+# Vanilla Policy Gradient (with GAE Lambda advantage estimation) agent
+# modified for the AIQ test from the Spinning up pytorch implementation
+#
+# Copyright Joshua Achiam 2018 (OpenAI)
+# Copyright Petr Zeman 2023
+# Copyright Ondřej Vadinský 2023
+# Copyright Jan Štipl 2023
+# Released under GNU GPLv3
+#
 
 import sys
 import time
