@@ -197,7 +197,7 @@ class PPO(Agent):
     def perceive(self, observations, reward):
 
         if len(observations) != self.obs_cells:
-            raise NameError("PPO recieved wrong number of observations!")
+            raise NameError("PPO received wrong number of observations!")
 
         # convert observations into a single number for the new state
         nstate = 0
