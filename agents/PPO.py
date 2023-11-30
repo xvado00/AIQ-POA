@@ -219,7 +219,7 @@ class PPO(Agent):
             self.logger.store(VVals=v)
 
             # Every epoch end process trajectory and update policy
-            if (self.epoch_step == self.local_steps_per_epoch - 1):
+            if self.epoch_step == self.local_steps_per_epoch - 1:
                 self.logger.store(EpRet=reward, EpLen=self.local_steps_per_epoch)
                 self.buf.finish_path(v)
                 self.update()
@@ -230,7 +230,7 @@ class PPO(Agent):
 
 
 
-        except Exception as e:
+        except Exception as _:
             self.failed = True
             self.setup_agent()
             return 0
