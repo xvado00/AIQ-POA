@@ -74,10 +74,6 @@ class VPG(Agent):
         else:
             self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2, self.hidden3))
 
-        # Count variables
-        # var_counts = tuple(core.count_vars(module) for module in [self.ac.pi, self.ac.v])
-        # self.logger.log('\nNumber of parameters: \t pi: %d, \t v: %d\n' % var_counts)
-
         # Set up experience buffer
         self.local_steps_per_epoch = int(self.steps_per_epoch // mpi_tools.num_procs())
         self.buf = PolicyEnvBuffer(self.obs_dim, 1, self.local_steps_per_epoch, self.gamma, self.Lambda)
