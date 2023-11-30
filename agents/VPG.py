@@ -143,9 +143,11 @@ class VPG(Agent):
         self.logger.log_tabular('Time', time.time() - self.start_time)
         self.logger.dump_tabular()
 
-
-    def get_full_log(self):
-        return self.logger.get_full_log()
+    def get_logs(self) -> dict:
+        log_dict = dict()
+        for i, log_data in enumerate(self.logger.get_full_log()):
+            log_dict[i] = log_data
+        return log_dict
 
     def update(self):
         data = self.buf.get()
