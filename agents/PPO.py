@@ -1,4 +1,3 @@
-
 """
 PPO agent modified from Spinning up pytorch implementation of PPO agent for use on specifically Discrete
 and interactive (non-gym) based environment of AIQ.
@@ -7,26 +6,30 @@ Original Author: Achiam Joshua 2018 (OpenAI)
 Modified By: Petr Zeman 2022
 """
 
-from .Agent import Agent
-import numpy as np
-from agents.utils.spinning_up_tools import mpi_pytorch, SpinCore as core, mpi_tools
-from torch.optim import Adam
-from agents.utils.spinning_up_tools.logx import EpochLogger
-from agents.utils.spinning_up_tools.PolicyEnvBuffer import PolicyEnvBuffer
-from agents.utils.spinning_up_tools.run_utils import setup_logger_kwargs
-import torch
 import sys
 import time
+
+import numpy as np
+import torch
+from torch.optim import Adam
+
+from agents.utils.spinning_up_tools import mpi_pytorch, SpinCore as core, mpi_tools
+from agents.utils.spinning_up_tools.PolicyEnvBuffer import PolicyEnvBuffer
+from agents.utils.spinning_up_tools.logx import EpochLogger
+from agents.utils.spinning_up_tools.run_utils import setup_logger_kwargs
+from .Agent import Agent
 
 
 class PPO(Agent):
 
-    def __init__( self, refm, disc_rate, steps_per_epoch =  20, train_pi_iters=80, train_v_iters = 80, gamma = 0.99, pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio = 0.2, target_kl = 0.01, hidden1=64, hidden2=64, hidden3=0, threads=1 ):
-        Agent.__init__( self, refm, disc_rate )
+    def __init__(self, refm, disc_rate, steps_per_epoch=20, train_pi_iters=80, train_v_iters=80, gamma=0.99,
+                 pi_lr=0.0003, vf_lr=0.001, lam=0.97, clip_ratio=0.2, target_kl=0.01, hidden1=64, hidden2=64, hidden3=0,
+                 threads=1):
+        Agent.__init__(self, refm, disc_rate)
 
-        self.num_states  = refm.getNumObs() # assuming that states = observations
+        self.num_states = refm.getNumObs()  # assuming that states = observations
         self.obs_symbols = refm.getNumObsSyms()
-        self.obs_cells   = refm.getNumObsCells()
+        self.obs_cells = refm.getNumObsCells()
         self.obs_dim = refm.getNumObsSyms() * refm.getNumObsCells()
         self.act_dim = refm.getNumActions()
         self.steps_per_epoch = int(steps_per_epoch)
@@ -59,7 +62,7 @@ class PPO(Agent):
 
     def setup_agent(self):
         # Reset state and action
-        self.state  = 0
+        self.state = 0
         self.action = 0
         self.epoch_step = 0
 
@@ -69,7 +72,6 @@ class PPO(Agent):
             self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2))
         else:
             self.ac = actor_critic(self.obs_dim, self.act_dim, hidden_sizes=(self.hidden1, self.hidden2, self.hidden3))
-
 
         # Count variables
         # var_counts = tuple(core.count_vars(module) for module in [self.ac.pi, self.ac.v])
@@ -83,23 +85,20 @@ class PPO(Agent):
         self.pi_optimizer = Adam(self.ac.pi.parameters(), lr=self.pi_lr)
         self.vf_optimizer = Adam(self.ac.v.parameters(), lr=self.vf_lr)
 
-
-    def reset( self ):
+    def reset(self):
 
         # Prepare for interaction with environment
         self.start_time = time.time()
-        self.logger_kwargs = setup_logger_kwargs(self.__str__(),data_dir='./policy-log/',datestamp=True)
+        self.logger_kwargs = setup_logger_kwargs(self.__str__(), data_dir='./policy-log/', datestamp=True)
         # Set up logger and save configuration
-        self.logger = EpochLogger(output_fname= self.__str__() + '_' + '.csv',**self.logger_kwargs)
+        self.logger = EpochLogger(output_fname=self.__str__() + '_' + '.csv', **self.logger_kwargs)
 
         # setup agent multithreading
         mpi_pytorch.setup_pytorch_for_mpi(self.threads)
 
         # self.logger.save_config(locals())
 
-
         self.setup_agent()
-
 
         # Set up model saving
         self.logger.setup_pytorch_saver(self.ac)
@@ -107,24 +106,23 @@ class PPO(Agent):
         # Set up model saving
         # logger.setup_pytorch_saver(ac)
 
-    def __str__( self ):
-        return "PPO(" + str(int(self.steps_per_epoch)) + "," + str(self.train_pi_iters) + "," + str(self.train_v_iters) + "," + \
+    def __str__(self):
+        return "PPO(" + str(int(self.steps_per_epoch)) + "," + str(self.train_pi_iters) + "," + str(
+            self.train_v_iters) + "," + \
             str(self.gamma) + "," + str(self.pi_lr) + "," + \
             str(self.vf_lr) + "," + str(self.Lambda) + "," + str(self.clip_ratio) + "," + str(self.target_kl) + "," + \
             str(self.hidden1) + "," + str(self.hidden2) + "," + str(self.hidden3) + ")"
-
 
     # Set up function for computing PPO  policy loss
     def compute_loss_pi(self, data):
         obs, act, adv, logp_old = data['obs'], data['act'], data['adv'], data['logp']
 
-        act = act[:,-1]
+        act = act[:, -1]
         # Policy loss
         pi, logp = self.ac.pi(obs, act)
         ratio = torch.exp(logp - logp_old)
         clip_adv = torch.clamp(ratio, 1 - self.clip_ratio, 1 + self.clip_ratio) * adv
         loss_pi = -(torch.min(ratio * adv, clip_adv)).mean()
-
 
         # Useful extra info
         approx_kl = (logp_old - logp).mean().item()
@@ -195,14 +193,13 @@ class PPO(Agent):
         # Log changes from update
         kl, ent, cf = pi_info['kl'], pi_info_old['ent'], pi_info['cf']
         self.logger.store(LossPi=pi_l_old, LossV=v_l_old,
-                     KL=kl, Entropy=ent, ClipFrac=cf,
-                     DeltaLossPi=(loss_pi.item() - pi_l_old),
-                     DeltaLossV=(loss_v.item() - v_l_old))
+                          KL=kl, Entropy=ent, ClipFrac=cf,
+                          DeltaLossPi=(loss_pi.item() - pi_l_old),
+                          DeltaLossV=(loss_v.item() - v_l_old))
 
         self.log_update()
 
-
-    def perceive( self, observations, reward ):
+    def perceive(self, observations, reward):
 
         if len(observations) != self.obs_cells:
             raise NameError("PPO recieved wrong number of observations!")
@@ -210,7 +207,7 @@ class PPO(Agent):
         # convert observations into a single number for the new state
         nstate = 0
         for i in range(self.obs_cells):
-           nstate = observations[i] * self.obs_symbols**i
+            nstate = observations[i] * self.obs_symbols ** i
 
         # convert new state into numpy array
         np_observation_list = np.array(nstate)
@@ -219,7 +216,7 @@ class PPO(Agent):
         np_observation_current: np.ndarray = np.eye(self.obs_dim)[np_observation_list.reshape(-1)]
 
         try:
-        # Main loop: collect experience in env and update/log each epoch
+            # Main loop: collect experience in env and update/log each epoch
             a, v, logp = self.ac.step(torch.as_tensor(np_observation_current, dtype=torch.float32))
 
             # save
@@ -227,11 +224,11 @@ class PPO(Agent):
             self.logger.store(VVals=v)
 
             # Every epoch end process trajectory and update policy
-            if (self.epoch_step == self.local_steps_per_epoch-1):
+            if (self.epoch_step == self.local_steps_per_epoch - 1):
                 self.logger.store(EpRet=reward, EpLen=self.local_steps_per_epoch)
                 self.buf.finish_path(v)
                 self.update()
-                self.epoch_step =0
+                self.epoch_step = 0
                 self.epoch += 1
             else:
                 self.epoch_step += 1
@@ -243,6 +240,5 @@ class PPO(Agent):
             self.setup_agent()
             return 0
 
-
-
         return a.item()
+
