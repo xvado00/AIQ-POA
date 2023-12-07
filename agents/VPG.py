@@ -176,14 +176,15 @@ class VPG(Agent):
             mpi_pytorch.mpi_avg_grads(self.ac.v)  # average grads across MPI processes
             self.vf_optimizer.step()
 
-        # Log changes from update
-        kl, ent = pi_info['kl'], pi_info_old['ent']
-        self.logger.store(LossPi=pi_l_old, LossV=v_l_old,
-                          KL=kl, Entropy=ent,
-                          DeltaLossPi=(loss_pi.item() - pi_l_old),
-                          DeltaLossV=(loss_v.item() - v_l_old))
+        if self.logging_enabled:
+            # Log changes from update
+            kl, ent = pi_info['kl'], pi_info_old['ent']
+            self.logger.store(LossPi=pi_l_old, LossV=v_l_old,
+                              KL=kl, Entropy=ent,
+                              DeltaLossPi=(loss_pi.item() - pi_l_old),
+                              DeltaLossV=(loss_v.item() - v_l_old))
 
-        self.log_update()
+            self.log_update()
 
     def perceive(self, observations, reward):
 
