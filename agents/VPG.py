@@ -6,7 +6,7 @@
 # Copyright Joshua Achiam 2018 (OpenAI)
 # Copyright Petr Zeman 2023
 # Copyright Ondřej Vadinský 2023
-# Copyright Jan Štipl 2023
+# Copyright Jan Štipl 2024
 # Released under GNU GPLv3
 #
 
@@ -22,6 +22,7 @@ from agents.utils.spinning_up_tools.PolicyEnvBuffer import PolicyEnvBuffer
 from agents.utils.spinning_up_tools.logx import EpochLogger
 from agents.utils.spinning_up_tools.run_utils import setup_logger_kwargs
 from .Agent import Agent
+from .utils.observation_encoder import encode_observations_n_hot
 
 
 class VPG(Agent):
@@ -191,23 +192,14 @@ class VPG(Agent):
         if len(observations) != self.obs_cells:
             raise NameError("VPG received wrong number of observations!")
 
-        # convert observations into a single number for the new state
-        nstate = 0
-        for i in range(self.obs_cells):
-            nstate = observations[i] * self.obs_symbols ** i
-
-        # convert new state into numpy array
-        np_observation_list = np.array(nstate)
-
-        # convert observation from numpy array through one hot encoding into tensor of dimension size
-        np_observation_current: np.ndarray = np.eye(self.obs_dim)[np_observation_list.reshape(-1)]
+        encoded_obs = encode_observations_n_hot(observations, self.obs_cells, self.obs_symbols)
 
         try:
             # Main loop: collect experience in env and update/log each epoch
-            a, v, logp = self.ac.step(torch.as_tensor(np_observation_current, dtype=torch.float32))
+            a, v, logp = self.ac.step(torch.as_tensor(encoded_obs, dtype=torch.float32))
 
             # save
-            self.buf.store(np_observation_current, a.item(), reward, v, logp)
+            self.buf.store(encoded_obs, a.item(), reward, v, logp)
             self.logger.store(VVals=v)
 
             # Every epoch end process trajectory and update policy
