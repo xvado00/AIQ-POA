@@ -22,7 +22,7 @@ and was used for the experiments in paper:
 
 Towards Evaluating Policy Optimisation Agents
 using Algorithmic Intelligence Quotient Test
-by Ondřej Vadinský and Petr Zeman, 2018.
+by Ondřej Vadinský and Petr Zeman, 2024.
 
 The code is released under the GNU GPLv3.  See Licence.txt file.
 
