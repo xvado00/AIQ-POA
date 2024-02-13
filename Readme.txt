@@ -24,6 +24,9 @@ Towards Evaluating Policy Optimisation Agents
 using Algorithmic Intelligence Quotient Test
 by Ondřej Vadinský and Petr Zeman, 2024.
 
+This work was funded by the Internal Grant Agency
+of Prague University of Economics and Business (F4/41/2023).
+
 The code is released under the GNU GPLv3.  See Licence.txt file.
 
 
